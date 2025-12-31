@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <title>حل‌کننده معادله</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+  <style>
+    body { font-family: Tahoma, sans-serif; max-width: 700px; margin: auto; padding: 20px; }
+    input { width: 100%; font-size: 16px; margin: 10px 0; }
+    button { font-size: 16px; padding: 8px 15px; }
+    #result { margin-top: 20px; font-weight: bold; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h2>حل‌کنندهٔ معادله (ریشه‌های حقیقی)</h2>
+  <p>معادله را وارد کن (مثال: <code>x^2 - 5*x + 6 = 0</code>)</p>
+  <input id="equation" placeholder="معادله...">
+  <p>بازهٔ جستجو:</p>
+  <input id="minX" type="number" value="-10"> تا 
+  <input id="maxX" type="number" value="10">
+  <button onclick="solve()">حل کن</button>
+  <div id="result"></div>
+
+  <script>
+    // ارزیابی عبارت با مقدار x
+    function evalExpr(expr, x) {
+      try {
+        return math.evaluate(expr, {x});
+      } catch {
+        return NaN;
+      }
+    }
+
+    // روش بایسکشن برای پیدا کردن ریشه
+    function bisection(f, a, b, tol=1e-6, maxIter=50) {
+      let fa = f(a), fb = f(b);
+      if (fa*fb > 0) return null;
+      let lo = a, hi = b, mid;
+      for (let i=0; i<maxIter; i++) {
+        mid = (lo+hi)/2;
+        let fm = f(mid);
+        if (Math.abs(fm) < tol) return mid;
+        if (fa*fm < 0) { hi = mid; fb = fm; }
+        else { lo = mid; fa = fm; }
+      }
+      return mid;
+    }
+
+    function solve() {
+      const eq = document.getElementById("equation").value.trim();
+      const minX = parseFloat(document.getElementById("minX").value);
+      const maxX = parseFloat(document.getElementById("maxX").value);
+      const resultEl = document.getElementById("result");
+      resultEl.innerHTML = "";
+
+      if (!eq.includes("=")) {
+        resultEl.innerText = "معادله باید شامل '=' باشد.";
+        return;
+      }
+
+      const [left, right] = eq.split("=");
+      const f = x => evalExpr(left, x) - evalExpr(right, x);
+
+      let roots = [];
+      let steps = 200; // تعداد تقسیمات بازه
+      let step = (maxX - minX) / steps;
+      let prevX = minX, prevF = f(prevX);
+
+      for (let i=1; i<=steps; i++) {
+        let x = minX + i*step;
+        let fx = f(x);
+        if (prevF*fx < 0) {
+          let r = bisection(f, prevX, x);
+          if (r !== null) roots.push(r);
+        }
+        prevX = x; prevF = fx;
+      }
+
+      if (roots.length === 0) {
+        resultEl.innerText = "در این بازه ریشه‌ای پیدا نشد.";
+      } else {
+        resultEl.innerText = "ریشه‌ها:\n" + roots.map((r,i)=>x${i+1} ≈ ${r.toFixed(6)}).join("\n");
+      }
+    }
+  </script>
+</body>
+</html>
